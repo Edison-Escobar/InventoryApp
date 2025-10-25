@@ -1,9 +1,14 @@
 ﻿using InventoryApp.Domain;
+using System.Collections.Generic;
 
-namespace InventoryApp.Repositories
+namespace InventoryApp.Infrastructure.Repositories
 {
-    public interface IClientRepository : IRepository<Client>
+    public interface IClientRepository
     {
-        Task<Client?> GetByNitAsync(string nit);
+        IEnumerable<Client> GetAll(string? filtro = null);
+        void Add(Client client);
+        void Update(Client client);
+        void Delete(int id);
+        Client? GetById(int id);
     }
 }

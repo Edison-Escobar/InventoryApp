@@ -1,15 +1,28 @@
 ﻿using InventoryApp.Repositories;
-using InventoryApp.Services;
+
 using InventoryApp.WinForms;
 
+using InventoryApp.Infrastructure.Repositories;
+
+Application.Run(new ProductsInlineForm(new ProductRepository()));
+
+var clientRepo = new ClientRepository();
+var clientesForm = new ClientesForm(clientRepo);
+Application.Run(clientesForm);
+
 namespace InventoryApp
+
 {
+
     internal static class Program
+
     {
+
         /// <summary>
         ///  The main entry point for the application.
         /// </summary>
         [STAThread]
+
         static void Main()
         {
 
@@ -20,11 +33,9 @@ namespace InventoryApp
             var clientRepo = new ClientRepository();
             var saleRepo = new SaleRepository();
 
-            // 🔹 Crear el servicio con los repositorios
-            var salesService = new SalesService(productRepo, saleRepo);
 
-            // 🔹 Ejecutar el formulario principal pasando las dependencias
-            Application.Run(new MainForm(productRepo, clientRepo, salesService));
         }
+
     }
+
 }

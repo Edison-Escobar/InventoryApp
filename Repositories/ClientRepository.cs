@@ -1,78 +1,90 @@
 ﻿using InventoryApp.Domain;
-using InventoryApp.Infrastructure;
 using MySql.Data.MySqlClient;
-using System.Data;
-using System.Text;
+using System;
+using System.Collections.Generic;
 
-namespace InventoryApp.Repositories
+namespace InventoryApp.Infrastructure.Repositories
 {
     public class ClientRepository : IClientRepository
     {
-        public async Task<List<Client>> GetAllAsync()
+        public IEnumerable<Client> GetAll(string? filtro = null)
         {
             var list = new List<Client>();
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand("SELECT id, nombre, nit FROM cliente ORDER BY nombre", con);
-            using var rd = await cmd.ExecuteReaderAsync();
-            while (await rd.ReadAsync())
+            using var conn = DbConnectionFactory.Instance.CreateOpen();
+
+            var sql = "SELECT id, nombre, nit, creado_en FROM cliente";
+            if (!string.IsNullOrWhiteSpace(filtro))
+                sql += " WHERE nombre LIKE @filtro OR nit LIKE @filtro";
+
+            using var cmd = new MySqlCommand(sql, conn);
+
+            if (!string.IsNullOrWhiteSpace(filtro))
+                cmd.Parameters.AddWithValue("@filtro", $"%{filtro}%");
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
                 list.Add(new Client
                 {
-                    Id = rd.GetInt32("id"),
-                    Nombre = rd.GetString("nombre"),
-                    Nit = rd.GetString("nit")
+                    Id = reader.GetInt32("id"),
+                    Nombre = reader.GetString("nombre"),
+                    Nit = reader.GetString("nit"),
+                    CreadoEn = reader.GetDateTime("creado_en")
                 });
             }
             return list;
         }
 
-        public async Task<Client?> GetByIdAsync(int id)
+        public void Add(Client c)
         {
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand("SELECT id, nombre, nit FROM cliente WHERE id=@id", con);
-            cmd.Parameters.AddWithValue("@id", id);
-            using var rd = await cmd.ExecuteReaderAsync();
-            if (await rd.ReadAsync())
-                return new Client { Id = rd.GetInt32("id"), Nombre = rd.GetString("nombre"), Nit = rd.GetString("nit") };
-            return null;
+            using var conn = DbConnectionFactory.Instance.CreateOpen();
+            string sql = @"INSERT INTO cliente(nombre, nit) 
+                           VALUES(@nombre, @nit)";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@nombre", c.Nombre);
+            cmd.Parameters.AddWithValue("@nit", c.Nit);
+            cmd.ExecuteNonQuery();
         }
 
-        public async Task<int> InsertAsync(Client c)
+        public void Update(Client c)
         {
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand(
-                "INSERT INTO cliente (nombre, nit) VALUES (@n, @nit); SELECT LAST_INSERT_ID();", con);
-            cmd.Parameters.AddWithValue("@n", c.Nombre);
-            cmd.Parameters.AddWithValue("@nit", c.Nit);
-            return Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        }
-
-        public async Task<bool> UpdateAsync(Client c)
-        {
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand("UPDATE cliente SET nombre=@n, nit=@nit WHERE id=@id", con);
-            cmd.Parameters.AddWithValue("@n", c.Nombre);
-            cmd.Parameters.AddWithValue("@nit", c.Nit);
+            using var conn = DbConnectionFactory.Instance.CreateOpen();
+            string sql = @"UPDATE cliente SET nombre=@nombre, nit=@nit
+                           WHERE id=@id";
+            using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", c.Id);
-            return await cmd.ExecuteNonQueryAsync() > 0;
+            cmd.Parameters.AddWithValue("@nombre", c.Nombre);
+            cmd.Parameters.AddWithValue("@nit", c.Nit);
+            cmd.ExecuteNonQuery();
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public void Delete(int id)
         {
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand("DELETE FROM cliente WHERE id=@id", con);
+            using var conn = DbConnectionFactory.Instance.CreateOpen();
+            string sql = "DELETE FROM cliente WHERE id=@id";
+            using var cmd = new MySqlCommand(sql, conn);
             cmd.Parameters.AddWithValue("@id", id);
-            return await cmd.ExecuteNonQueryAsync() > 0;
+            cmd.ExecuteNonQuery();
         }
 
-        public async Task<Client?> GetByNitAsync(string nit)
+        public Client? GetById(int id)
         {
-            using var con = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand("SELECT id, nombre, nit FROM cliente WHERE nit=@nit", con);
-            cmd.Parameters.AddWithValue("@nit", nit);
-            using var rd = await cmd.ExecuteReaderAsync();
-            if (await rd.ReadAsync())
-                return new Client { Id = rd.GetInt32("id"), Nombre = rd.GetString("nombre"), Nit = rd.GetString("nit") };
+            using var conn = DbConnectionFactory.Instance.CreateOpen();
+            var sql = "SELECT id, nombre, nit, creado_en FROM cliente WHERE id=@id";
+            using var cmd = new MySqlCommand(sql, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+
+            using var reader = cmd.ExecuteReader();
+            if (reader.Read())
+            {
+                return new Client
+                {
+                    Id = reader.GetInt32("id"),
+                    Nombre = reader.GetString("nombre"),
+                    Nit = reader.GetString("nit"),
+                    CreadoEn = reader.GetDateTime("creado_en")
+                };
+            }
             return null;
         }
     }

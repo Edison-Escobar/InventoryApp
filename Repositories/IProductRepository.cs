@@ -2,9 +2,11 @@
 
 namespace InventoryApp.Repositories
 {
-    public interface IProductRepository : IRepository<Product>
+    public interface IProductRepository
     {
-        Task<List<Product>> SearchByNameAsync(string name);
-        Task<bool> UpdateStockAsync(int productId, int newStock);
+        Task<List<Product>> GetAllAsync();
+        Task<int> InsertAsync(Product p);
+        Task<bool> UpdateAsync(Product p);
+        Task<bool> DeleteAsync(int id);
     }
 }
