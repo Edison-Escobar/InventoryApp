@@ -1,5 +1,6 @@
-﻿using MySql.Data.MySqlClient;
 
+using MySql.Data.MySqlClient;
+using System.Data.SqlClient;
 namespace InventoryApp.Infrastructure
 {
     public sealed class DbConnectionFactory

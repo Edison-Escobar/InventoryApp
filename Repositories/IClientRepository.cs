@@ -1,5 +1,4 @@
 ﻿using InventoryApp.Domain;
-using System.Collections.Generic;
 
 namespace InventoryApp.Infrastructure.Repositories
 {

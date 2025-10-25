@@ -1,7 +1,5 @@
 ﻿using InventoryApp.Domain;
 using InventoryApp.Infrastructure;
-using MySql.Data.MySqlClient;
-using System.Data;
 
 namespace InventoryApp.Repositories
 {
@@ -26,51 +24,34 @@ namespace InventoryApp.Repositories
                     Stock = reader.GetInt32("stock")
                 });
             }
-
             return list;
         }
 
-        public async Task<int> InsertAsync(Product p)
+        public async Task<Product?> GetByIdAsync(int id)
         {
-            using var conn = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand(
-                @"INSERT INTO producto (nombre, precio, stock)
-                  VALUES (@n, @pr, @st);
-                  SELECT LAST_INSERT_ID();", conn);
-
-            cmd.Parameters.AddWithValue("@n", p.Nombre);
-            cmd.Parameters.AddWithValue("@pr", p.Precio);
-            cmd.Parameters.AddWithValue("@st", p.Stock);
-
-            var id = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-            return id;
+            using var conn = DbConnectionFactory.CreateConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "SELECT Id, Name, Price, Stock FROM Products WHERE Id = @Id";
+            cmd.Parameters.Add(new SqlParameter("@Id", id));
+            await conn.OpenAsync();
+            using var reader = await cmd.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                return new Product
+        {
+                    Id = reader.GetInt32(0),
+                    Name = reader.GetString(1),
+                    Price = reader.GetDecimal(2),
+                    Stock = reader.GetInt32(3)
+                };
+        }
+            return null;
         }
 
-        public async Task<bool> UpdateAsync(Product p)
+        public async Task UpdateAsync(Product product)
         {
-            using var conn = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand(
-                @"UPDATE producto
-                  SET nombre=@n, precio=@pr, stock=@st
-                  WHERE id=@id;", conn);
-
-            cmd.Parameters.AddWithValue("@id", p.Id);
-            cmd.Parameters.AddWithValue("@n", p.Nombre);
-            cmd.Parameters.AddWithValue("@pr", p.Precio);
-            cmd.Parameters.AddWithValue("@st", p.Stock);
-
-            return await cmd.ExecuteNonQueryAsync() > 0;
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            using var conn = DbConnectionFactory.Instance.CreateOpen();
-            using var cmd = new MySqlCommand(
-                "DELETE FROM producto WHERE id=@id;", conn);
-
-            cmd.Parameters.AddWithValue("@id", id);
-
-            return await cmd.ExecuteNonQueryAsync() > 0;
+            // Implementar según necesidad
+            await Task.CompletedTask;
         }
     }
 }

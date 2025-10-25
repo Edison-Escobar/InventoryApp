@@ -1,5 +1,4 @@
 ﻿using InventoryApp.Domain;
-using InventoryApp.Infrastructure.Repositories;
 using System;
 using System.Linq;
 using System.Windows.Forms;

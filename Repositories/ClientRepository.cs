@@ -87,5 +87,19 @@ namespace InventoryApp.Infrastructure.Repositories
             }
             return null;
         }
+
+        public async Task UpdateAsync(Client client)
+        {
+            using var conn = DbConnectionFactory.CreateConnection();
+            using var cmd = conn.CreateCommand();
+            cmd.CommandText = "UPDATE Clients SET FullName=@FullName, Email=@Email, Phone=@Phone, Address=@Address WHERE Id=@Id";
+            cmd.Parameters.Add(new SqlParameter("@FullName", client.FullName));
+            cmd.Parameters.Add(new SqlParameter("@Email", client.Email));
+            cmd.Parameters.Add(new SqlParameter("@Phone", client.Phone));
+            cmd.Parameters.Add(new SqlParameter("@Address", client.Address));
+            cmd.Parameters.Add(new SqlParameter("@Id", client.Id));
+            await conn.OpenAsync();
+            await cmd.ExecuteNonQueryAsync();
+        }
     }
 }
